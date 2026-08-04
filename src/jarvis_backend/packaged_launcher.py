@@ -100,6 +100,7 @@ def build_runtime_config(
     model_root: Path,
     server_port: int = DEFAULT_SERVER_PORT,
     pipe_name: str = DEFAULT_PIPE_NAME,
+    capture_interval_ms: int = 30_000,
 ) -> str:
     escaped_pipe_name = pipe_name.replace("\\", "\\\\").replace('"', '\\"')
     return f'''[app]
@@ -120,7 +121,7 @@ model_path = "{_toml_path(model_root)}"
 request_timeout_seconds = 120.0
 heartbeat_interval_seconds = 10.0
 max_frame_bytes = 8388608
-capture_interval_ms = 30000
+capture_interval_ms = {max(250, min(int(capture_interval_ms), 120_000))}
 
 [scene]
 display_enter_samples = 2
@@ -374,7 +375,14 @@ def _launch() -> int:
         environment["JARVIS_ACTIVE_INFERENCE_BACKEND"] = inference_backend
         config_path = runtime_data / "real.toml"
         config_path.write_text(
-            build_runtime_config(data_root, worker_path, model_root, server_port, pipe_name),
+            build_runtime_config(
+                data_root,
+                worker_path,
+                model_root,
+                server_port,
+                pipe_name,
+                int(environment.get("JARVIS_CAPTURE_INTERVAL_MS", "30000")),
+            ),
             encoding="utf-8",
         )
         backend = subprocess.Popen(

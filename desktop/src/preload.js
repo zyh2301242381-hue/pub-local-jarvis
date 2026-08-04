@@ -15,6 +15,8 @@ contextBridge.exposeInMainWorld("jarvis", {
   resume: () => ipcRenderer.invoke("jarvis:resume"),
   openOutput: outputPath => ipcRenderer.invoke("jarvis:open-output", outputPath),
   getState: () => ipcRenderer.invoke("jarvis:get-state"),
+  getPerformanceMode: () => ipcRenderer.invoke("jarvis:performance-get"),
+  savePerformanceMode: mode => ipcRenderer.invoke("jarvis:performance-save", mode),
   getGameProfiles: () => ipcRenderer.invoke("jarvis:get-game-profiles"),
   saveGameProfile: profile => ipcRenderer.invoke("jarvis:save-game-profile", profile),
   selectGameProfile: id => ipcRenderer.invoke("jarvis:select-game-profile", id),

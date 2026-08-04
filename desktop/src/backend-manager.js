@@ -147,6 +147,7 @@ class BackendManager extends EventEmitter {
     this.packaged = options.packaged === true;
     this.useFake = options.useFake === true;
     this.preferredPort = options.preferredPort || DEFAULT_PACKAGED_PORT;
+    this.captureIntervalMs = Math.max(250, Math.min(Number(options.captureIntervalMs) || 30000, 120000));
     this.baseUrl = options.baseUrl || `http://127.0.0.1:${this.packaged ? this.preferredPort : 8000}`;
     this.portSelector = options.portSelector || selectAvailablePort;
     this.pipeNameFactory = options.pipeNameFactory || (() => (
@@ -291,6 +292,7 @@ class BackendManager extends EventEmitter {
         PYTHONUNBUFFERED: "1",
         PYTHONUTF8: "1",
         ...(this.dataRoot ? { JARVIS_DATA_ROOT: this.dataRoot } : {}),
+        JARVIS_CAPTURE_INTERVAL_MS: String(this.captureIntervalMs),
         ...(this.packaged ? { JARVIS_SERVER_PORT: serverPort, JARVIS_PIPE_NAME: this.pipeName } : {}),
       },
     });

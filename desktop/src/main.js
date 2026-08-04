@@ -67,10 +67,13 @@ let gameSettings = defaultSettings();
 let gameSettingsPath = "";
 let imageSettingsPath = "";
 let imageSettings = { baseUrl: "", modelName: "", apiKey: "" };
+let performanceSettingsPath = "";
+let performanceMode = "quiet";
 let activeCourseSessionId = null;
 const pendingCaptures = new Set();
 const PET_COMPACT_SIZE = Object.freeze({ width: 390, height: 300 });
 const PET_CHAT_SIZE = Object.freeze({ width: 540, height: 360 });
+const PERFORMANCE_INTERVALS = Object.freeze({ performance: 2000, balanced: 10000, quiet: 30000 });
 const state = {
   phase: "idle",
   monitoring: false,
@@ -81,7 +84,27 @@ const state = {
   inferenceReason: "",
   screenBlocked: false,
   gameProfile: "我的世界",
+  performanceMode: "quiet",
 };
+
+function loadPerformanceMode(filePath) {
+  try {
+    const value = JSON.parse(fs.readFileSync(filePath, "utf8"));
+    if (Object.hasOwn(PERFORMANCE_INTERVALS, value.mode)) return value.mode;
+  } catch (_) {}
+  return "quiet";
+}
+
+function savePerformanceMode(mode) {
+  if (!Object.hasOwn(PERFORMANCE_INTERVALS, mode)) throw new Error("未知的性能模式");
+  if (state.phase !== "idle" && state.phase !== "error") {
+    throw new Error("请先关闭并重新打开 AI，再切换性能模式");
+  }
+  performanceMode = mode;
+  fs.writeFileSync(performanceSettingsPath, JSON.stringify({ mode }, null, 2), "utf8");
+  publishState({ performanceMode: mode });
+  return { mode, captureIntervalMs: PERFORMANCE_INTERVALS[mode] };
+}
 
 function selectedGameProfile() {
   return gameSettings.profiles.find(item => item.id === gameSettings.selectedId) || gameSettings.profiles[0];
@@ -666,6 +689,11 @@ function registerIpc() {
   ipcMain.handle("jarvis:pause", pauseMonitoring);
   ipcMain.handle("jarvis:resume", resumeMonitoring);
   ipcMain.handle("jarvis:get-state", () => ({ ...state }));
+  ipcMain.handle("jarvis:performance-get", () => ({
+    mode: performanceMode,
+    captureIntervalMs: PERFORMANCE_INTERVALS[performanceMode],
+  }));
+  ipcMain.handle("jarvis:performance-save", (_event, mode) => savePerformanceMode(String(mode)));
   ipcMain.handle("jarvis:memory-status", () => manager.memoryStatus());
   ipcMain.handle("jarvis:memory-days", () => manager.memoryDays());
   ipcMain.handle("jarvis:memory-day", (_event, day) => manager.memoryDay(day));
@@ -743,13 +771,17 @@ app.whenReady().then(() => {
   gameSettings = loadSettings(gameSettingsPath);
   imageSettingsPath = path.join(app.getPath("userData"), "image-generation.json");
   imageSettings = loadImageSettings(imageSettingsPath, decryptApiKey);
+  performanceSettingsPath = path.join(app.getPath("userData"), "performance.json");
+  performanceMode = loadPerformanceMode(performanceSettingsPath);
   state.gameProfile = selectedGameProfile().name;
+  state.performanceMode = performanceMode;
   const useFake = process.env.JARVIS_DESKTOP_USE_FAKE === "1";
   manager = new BackendManager({
     backendRoot: backendRoot(),
     dataRoot: backendDataRoot(),
     packaged: app.isPackaged,
     useFake,
+    captureIntervalMs: PERFORMANCE_INTERVALS[performanceMode],
   });
   manager.on("progress", handleBackendProgress);
   manager.on("event", handleBackendEvent);

@@ -57,6 +57,19 @@ def test_packaged_runtime_config_accepts_an_isolated_pipe(tmp_path: Path) -> Non
     assert document["native"]["pipe_name"] == pipe_name
 
 
+def test_packaged_runtime_config_accepts_capture_interval(tmp_path: Path) -> None:
+    document = tomllib.loads(
+        build_runtime_config(
+            tmp_path / "data",
+            tmp_path / "worker.exe",
+            tmp_path / "models",
+            capture_interval_ms=10_000,
+        )
+    )
+
+    assert document["native"]["capture_interval_ms"] == 10_000
+
+
 def test_packaged_runtime_prefers_cuda_and_keeps_cpu_fallback(tmp_path: Path) -> None:
     (tmp_path / "jarvis-native-worker-cuda.exe").touch()
     (tmp_path / "jarvis-native-worker-cpu.exe").touch()

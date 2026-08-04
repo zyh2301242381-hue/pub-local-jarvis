@@ -13,6 +13,8 @@ const startupProgressValue = $("#startup-progress-value");
 const startupProgressTrack = $("#startup-progress-track");
 const startupProgressBar = $("#startup-progress-bar");
 const monitorValue = $("#monitor-value");
+const performanceMode = $("#performance-mode");
+const performanceModeDetail = $("#performance-mode-detail");
 const sceneValue = $("#scene-value");
 const activityLog = $("#activity-log");
 const gameProfileSummary = $("#game-profile-summary");
@@ -51,6 +53,12 @@ let memoryMode = "text";
 let currentMemoryImages = [];
 let selectedMemoryImageId = "";
 let lastLoggedDownloadPercent = -5;
+
+const performanceModeDetails = {
+  performance: "性能：每 2 秒感知一次",
+  balanced: "平衡：每 10 秒感知一次",
+  quiet: "安静：每 30 秒感知一次",
+};
 
 const sceneNames = { game: "游戏", course: "网课", other: "其他" };
 const phaseView = {
@@ -153,6 +161,9 @@ function render(state) {
     ? "正在初始化环境感知模型，完成后将自动开始持续理解。"
     : detail);
   monitorValue.textContent = state.monitoring ? "感知中" : phase === "paused" ? "已暂停" : "未运行";
+  performanceMode.value = state.performanceMode || performanceMode.value || "quiet";
+  performanceMode.disabled = phase !== "idle" && phase !== "error";
+  performanceModeDetail.textContent = performanceModeDetails[performanceMode.value];
   sceneValue.textContent = state.scene === "game" ? `游戏 · ${state.gameProfile}` : sceneNames[state.scene] || "其他";
   gameProfileSummary.textContent = `游戏方案：${state.gameProfile || "我的世界"}`;
   if (phase === "starting" || initializingEnvironment) {
@@ -427,6 +438,20 @@ pauseButton.addEventListener("click", async () => {
     const state = await window.jarvis.getState();
     render(state.monitoring ? await window.jarvis.pause() : await window.jarvis.resume());
   } catch (error) { addLog(error.message); }
+});
+
+performanceMode.addEventListener("change", async () => {
+  try {
+    const settings = await window.jarvis.savePerformanceMode(performanceMode.value);
+    performanceMode.value = settings.mode;
+    performanceModeDetail.textContent = performanceModeDetails[settings.mode];
+    addLog(`性能模式已切换为：${settings.mode}`);
+  } catch (error) {
+    addLog(readableError(error));
+    const settings = await window.jarvis.getPerformanceMode();
+    performanceMode.value = settings.mode;
+    performanceModeDetail.textContent = performanceModeDetails[settings.mode];
+  }
 });
 
 document.querySelectorAll(".view-tab").forEach(tab => tab.addEventListener("click", () => switchView(tab.dataset.view)));

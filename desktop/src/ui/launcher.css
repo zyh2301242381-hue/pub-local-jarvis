@@ -203,6 +203,7 @@ button, select { cursor: pointer; }
 .system-row strong { margin-bottom: 2px; font-size: 12px; font-weight: 670; }
 .system-row small { color: var(--muted); font-size: 10px; }
 .row-value { max-width: 125px; overflow: hidden; color: #53615f; font-size: 10px; text-overflow: ellipsis; white-space: nowrap; }
+.compact-select { width: 74px; height: 30px; padding: 0 7px; border: 1px solid #c9d4d1; border-radius: 6px; color: var(--teal-dark); background: var(--paper); font-size: 10px; }
 .profile-row { background: transparent; }
 .profile-row:hover { background: #f4f8f6; }
 .row-action { display: inline-flex; align-items: center; gap: 2px; color: var(--teal-dark); font-size: 10px; font-weight: 640; }

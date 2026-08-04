@@ -67,6 +67,15 @@
               <span id="monitor-value" class="row-value">未运行</span>
             </div>
             <div class="system-row">
+              <span class="row-icon green"><i data-lucide="gauge"></i></span>
+              <div><strong>性能模式</strong><small id="performance-mode-detail">安静：每 30 秒感知一次</small></div>
+              <select id="performance-mode" class="compact-select" aria-label="性能模式">
+                <option value="performance">性能</option>
+                <option value="balanced">平衡</option>
+                <option value="quiet">安静</option>
+              </select>
+            </div>
+            <div class="system-row">
               <span class="row-icon amber"><i data-lucide="gamepad-2"></i></span>
               <div><strong>当前场景</strong><small id="game-profile-summary">游戏方案：我的世界</small></div>
               <span id="scene-value" class="row-value">其他</span>
