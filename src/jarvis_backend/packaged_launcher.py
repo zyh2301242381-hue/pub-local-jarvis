@@ -120,6 +120,7 @@ model_path = "{_toml_path(model_root)}"
 request_timeout_seconds = 120.0
 heartbeat_interval_seconds = 10.0
 max_frame_bytes = 8388608
+capture_interval_ms = 30000
 
 [scene]
 display_enter_samples = 2

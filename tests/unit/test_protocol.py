@@ -51,6 +51,14 @@ def test_json_payload_is_utf8_and_compact() -> None:
     assert b" " not in payload
 
 
+def test_named_pipe_client_clamps_capture_interval() -> None:
+    too_fast = NamedPipeNativeClient("pipe", capture_interval_ms=1)
+    too_slow = NamedPipeNativeClient("pipe", capture_interval_ms=999_999)
+
+    assert too_fast.capture_interval_ms == 250
+    assert too_slow.capture_interval_ms == 120_000
+
+
 def test_protocol_rejects_wrong_version_and_corruption() -> None:
     encoded = encode_frame(Frame(MessageType.STATUS, payload=b"ok", version=2))
     with pytest.raises(ProtocolError, match="unsupported protocol version"):

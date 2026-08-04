@@ -16,6 +16,8 @@ model_path = "models/MiniCPM-o-4_5-gguf"
 request_timeout_seconds = 5.0
 heartbeat_interval_seconds = 10.0
 max_frame_bytes = 8388608
+# RTX 4060 laptop-friendly default: one multimodal perception sample every 30 seconds.
+capture_interval_ms = 30000
 
 [scene]
 enter_threshold = 0.72

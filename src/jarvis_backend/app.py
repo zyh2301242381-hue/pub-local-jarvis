@@ -23,6 +23,7 @@ def create_app(
         else NamedPipeNativeClient(
             config.native.pipe_name,
             timeout=config.native.request_timeout_seconds,
+            capture_interval_ms=config.native.capture_interval_ms,
         )
     )
     orchestrator = OrchestrationService(config, client)

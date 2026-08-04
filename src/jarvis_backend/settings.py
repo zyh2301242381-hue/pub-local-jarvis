@@ -24,6 +24,7 @@ class NativeSettings(BaseModel):
     request_timeout_seconds: float = Field(default=5.0, gt=0)
     heartbeat_interval_seconds: float = Field(default=10.0, gt=0)
     max_frame_bytes: int = Field(default=8 * 1024 * 1024, ge=1024)
+    capture_interval_ms: int = Field(default=30_000, ge=250, le=120_000)
 
 
 class SceneSettings(BaseModel):

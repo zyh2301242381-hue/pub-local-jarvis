@@ -25,6 +25,7 @@ def test_packaged_runtime_config_uses_writable_data_paths(tmp_path: Path) -> Non
     assert settings.native.pipe_name == r"\\.\pipe\AIJarvis.Worker.v1"
     assert settings.native.worker_path == worker.resolve()
     assert settings.native.model_path == models.resolve()
+    assert settings.native.capture_interval_ms == 30_000
     assert settings.memory.root == (data_root / "memory").resolve()
     assert settings.courses.sessions_root == (data_root / "courses" / "sessions").resolve()
 

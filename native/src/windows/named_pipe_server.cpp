@@ -13,6 +13,8 @@
 #include <thread>
 #include <vector>
 
+#include <nlohmann/json.hpp>
+
 namespace jarvis::win {
 namespace {
 bool read_exact(HANDLE pipe, std::byte* destination, std::size_t size) {
@@ -32,6 +34,19 @@ bool write_exact(HANDLE pipe, const std::byte* source, std::size_t size) {
     source += written; size -= written;
   }
   return true;
+}
+
+std::chrono::milliseconds capture_interval(std::span<const std::byte> payload) {
+  constexpr auto fallback = std::chrono::milliseconds(30'000);
+  if (payload.empty()) return fallback;
+  try {
+    const std::string text(reinterpret_cast<const char*>(payload.data()), payload.size());
+    const auto document = nlohmann::json::parse(text);
+    const auto value = document.value("capture_interval_ms", fallback.count());
+    return std::chrono::milliseconds(std::clamp<std::int64_t>(value, 250, 120'000));
+  } catch (...) {
+    return fallback;
+  }
 }
 } // namespace
 struct NamedPipeServer::Impl {
@@ -86,7 +101,9 @@ int NamedPipeServer::run() {
       if (type == ipc::MessageType::shutdown) { request_stop(); break; }
       if (type == ipc::MessageType::start) {
         try {
-          impl_->worker.start_monitoring(make_dxgi_desktop_capture(), make_wasapi_loopback_capture());
+          impl_->worker.start_monitoring(
+              make_dxgi_desktop_capture(), make_wasapi_loopback_capture(),
+              capture_interval(decoded.message.payload));
         } catch (...) {
           const auto response = ipc::encode(ipc::MessageType::error, id, {});
           std::lock_guard lock(impl_->write_mutex);

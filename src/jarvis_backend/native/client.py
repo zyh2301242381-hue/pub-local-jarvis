@@ -91,9 +91,16 @@ class NamedPipeNativeClient(NativeClient):
         "stop_duplex": MessageType.STOP_DUPLEX,
     }
 
-    def __init__(self, pipe_name: str, *, timeout: float = 5.0) -> None:
+    def __init__(
+        self,
+        pipe_name: str,
+        *,
+        timeout: float = 5.0,
+        capture_interval_ms: int = 30_000,
+    ) -> None:
         self.pipe_name = pipe_name
         self.timeout = timeout
+        self.capture_interval_ms = max(250, min(int(capture_interval_ms), 120_000))
         self.running = False
         self._stream: Any = None
         self._ids = count(1)
@@ -153,6 +160,8 @@ class NamedPipeNativeClient(NativeClient):
             session_id = str(payload.get("session_id", ""))[:128]
             instruction = str(payload.get("instruction", ""))[:2000]
             body = f"{session_id}\0{instruction}"
+        elif message_type == MessageType.START:
+            body = {"capture_interval_ms": self.capture_interval_ms}
         else:
             body = payload
         raw = body.encode("utf-8") if isinstance(body, str) else json_payload(body)
